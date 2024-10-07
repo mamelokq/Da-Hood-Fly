@@ -1,0 +1,60 @@
+local Players = game:GetService("Players")
+local InputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Camera = workspace.CurrentCamera
+
+local LocalPlayer = Players.LocalPlayer
+local flySpeed = 3 -- Your desired fly speed
+
+-- Helper function for safe normalization
+local function safeUnit(v)
+    return v.Magnitude > 0 and v.Unit or Vector3.zero
+end
+
+-- Fly function
+RunService.Stepped:Connect(function(delta)
+    if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        return
+    end
+
+    -- Check if the player is typing in chat
+    if InputService:GetFocusedTextBox() then
+        -- Maintain position in the air
+        LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0) -- Reset horizontal velocity
+        return -- Skip movement for directional controls
+    end
+
+    -- Reset vertical velocity to prevent falling
+    LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+
+    -- Directional controls
+    local x, y, z = 0, 0, 0
+
+    if InputService:IsKeyDown(Enum.KeyCode.W) then
+        z -= 1
+    end
+    if InputService:IsKeyDown(Enum.KeyCode.S) then
+        z += 1
+    end
+    if InputService:IsKeyDown(Enum.KeyCode.D) then
+        x += 1
+    end
+    if InputService:IsKeyDown(Enum.KeyCode.A) then
+        x -= 1
+    end
+    --[[ If you want the player to go up and down using space and right shift remove this tag
+    if InputService:IsKeyDown(Enum.KeyCode.Space) then
+        y += 1
+    end
+    if InputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+        y -= 1
+    end
+    --]]
+
+    -- Normalize movement direction to prevent excessive speed
+    local direction = safeUnit(Camera.CFrame:VectorToWorldSpace(Vector3.new(x, 0, z)))
+
+    -- Apply slower movement based on flySpeed, scaled for smoothness
+    LocalPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame 
+        + (direction + Vector3.new(0, y, 0)) * flySpeed * delta * 0.1 -- Reduce speed scaling
+end)
